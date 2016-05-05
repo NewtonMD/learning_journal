@@ -1,9 +1,4 @@
-from sqlalchemy import (
-    Column,
-    Index,
-    Integer,
-    Text,
-    )
+import sqlalchemy as sa
 
 from sqlalchemy.ext.declarative import declarative_base
 
@@ -18,10 +13,21 @@ DBSession = scoped_session(sessionmaker(extension=ZopeTransactionExtension()))
 Base = declarative_base()
 
 
-class MyModel(Base):
-    __tablename__ = 'models'
-    id = Column(Integer, primary_key=True)
-    name = Column(Text)
-    value = Column(Integer)
+class Entry(Base):
+    __tablename__ = 'entries'
+    id = sa.Column(sa.Integer, primary_key=True)
+    title = sa.Column(sa.Unicode(255), unique=True, nullable=False)
+    body = sa.Column(sa.UnicodeText)
+    created = sa.Column(sa.DateTime, default=sa.func.now())
+    edited = sa.Column(sa.DateTime, default=sa.func.now(), onupdate=sa.func.now())
 
-Index('my_index', MyModel.name, unique=True, mysql_length=255)
+    @classmethod
+    def all(cls):
+        return session.query.order_by(Session.DateTime).all()
+
+    @classmethod
+    def by_id(cls, id):
+        return session.query(Entry).filter(Entry.id==id).first()
+        
+
+sa.Index('my_index', Entry.title, unique=True, mysql_length=255)
